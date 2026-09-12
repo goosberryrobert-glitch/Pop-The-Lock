@@ -1,0 +1,945 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>POP THE LOCK</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at center, #082b17 0%, #03100a 45%, #000 100%);
+    color: #5cff9d;
+    font-family: "Courier New", monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.025) 0px,
+        rgba(255,255,255,.025) 1px,
+        transparent 2px,
+        transparent 5px
+    );
+    z-index: 20;
+}
+
+.game {
+    width: min(900px, 94vw);
+    min-height: 650px;
+    padding: 26px;
+    border-radius: 26px;
+    border: 1px solid rgba(92,255,157,.28);
+    background: rgba(2,15,8,.72);
+    backdrop-filter: blur(18px);
+    box-shadow:
+        0 0 60px rgba(0,255,100,.08),
+        inset 0 0 50px rgba(0,255,100,.04);
+    transition: .2s;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+.logo {
+    font-size: clamp(24px, 4vw, 40px);
+    font-weight: bold;
+    letter-spacing: 5px;
+    text-shadow: 0 0 15px #39ff78;
+}
+
+.logo span {
+    color: #d0ffe0;
+}
+
+.stats {
+    display: flex;
+    gap: 10px;
+}
+
+.stat {
+    min-width: 85px;
+    padding: 9px 13px;
+    border-radius: 12px;
+    border: 1px solid rgba(92,255,157,.22);
+    background: rgba(92,255,157,.045);
+    text-align: center;
+}
+
+.label {
+    font-size: 9px;
+    letter-spacing: 2px;
+    opacity: .5;
+}
+
+.value {
+    font-size: 19px;
+    font-weight: bold;
+    margin-top: 3px;
+}
+
+.arena {
+    height: 475px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lock {
+    width: min(390px, 76vw);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    position: relative;
+
+    background:
+        radial-gradient(circle,
+        #07170c 0%,
+        #061109 51%,
+        #020704 52%,
+        #071d10 63%,
+        #020704 64%,
+        #07130b 100%);
+
+    border: 3px solid rgba(92,255,157,.38);
+
+    box-shadow:
+        0 0 20px rgba(0,255,100,.15),
+        0 0 70px rgba(0,255,100,.06),
+        inset 0 0 45px rgba(0,255,100,.08);
+}
+
+.lock::before {
+    content: "";
+    position: absolute;
+    inset: 19px;
+    border-radius: 50%;
+    border: 2px dashed rgba(92,255,157,.14);
+}
+
+.lock::after {
+    content: "";
+    position: absolute;
+    inset: 52px;
+    border-radius: 50%;
+    border: 1px solid rgba(92,255,157,.12);
+}
+
+.target {
+    position: absolute;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: #baffd0;
+    box-shadow:
+        0 0 8px #39ff78,
+        0 0 20px #39ff78,
+        0 0 45px rgba(57,255,120,.7);
+    transform: translate(-50%, -50%);
+    z-index: 5;
+}
+
+.target::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border: 1px solid rgba(92,255,157,.5);
+    border-radius: 50%;
+}
+
+.needle {
+    position: absolute;
+    width: 50%;
+    height: 3px;
+    left: 50%;
+    top: 50%;
+    transform-origin: left center;
+    z-index: 4;
+}
+
+.needle-line {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(
+        to right,
+        rgba(92,255,157,0),
+        rgba(92,255,157,.3),
+        #8affb5
+    );
+    box-shadow: 0 0 10px #39ff78;
+}
+
+.needle-dot {
+    position: absolute;
+    right: -8px;
+    top: -6px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: white;
+    box-shadow:
+        0 0 8px #39ff78,
+        0 0 22px #39ff78;
+}
+
+.center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 105px;
+    height: 105px;
+    border-radius: 50%;
+    border: 2px solid rgba(92,255,157,.3);
+    background: rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 2;
+    box-shadow: inset 0 0 25px rgba(0,255,100,.08);
+}
+
+.center-main {
+    font-size: 27px;
+    font-weight: bold;
+}
+
+.center-small {
+    font-size: 9px;
+    letter-spacing: 2px;
+    opacity: .45;
+}
+
+.message {
+    position: absolute;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    font-size: 17px;
+    letter-spacing: 3px;
+    font-weight: bold;
+    text-shadow: 0 0 12px currentColor;
+    transition: .15s;
+    white-space: nowrap;
+}
+
+.help {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: .42;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+button {
+    display: block;
+    margin: 0 auto;
+    padding: 13px 32px;
+    border-radius: 13px;
+    border: 1px solid rgba(92,255,157,.4);
+    background: rgba(92,255,157,.07);
+    color: #8dffb4;
+    font-family: inherit;
+    font-weight: bold;
+    letter-spacing: 3px;
+    cursor: pointer;
+    box-shadow:
+        0 0 20px rgba(0,255,100,.06),
+        inset 0 0 15px rgba(0,255,100,.03);
+    transition: .2s;
+}
+
+button:hover {
+    background: rgba(92,255,157,.15);
+    box-shadow: 0 0 25px rgba(0,255,100,.2);
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: scale(.97);
+}
+
+.flash {
+    animation: flash .18s;
+}
+
+.shake {
+    animation: shake .25s;
+}
+
+@keyframes flash {
+    50% {
+        filter: brightness(2);
+    }
+}
+
+@keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+}
+
+.win {
+    animation: winGlow 1s infinite alternate;
+}
+
+@keyframes winGlow {
+    from {
+        box-shadow: 0 0 30px rgba(0,255,100,.1);
+    }
+    to {
+        box-shadow: 0 0 80px rgba(0,255,100,.6);
+    }
+}
+
+@media(max-width:600px) {
+    .game {
+        padding: 16px;
+        min-height: 620px;
+    }
+
+    header {
+        flex-direction: column;
+    }
+
+    .arena {
+        height: 450px;
+    }
+
+    .stats {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .stat {
+        flex: 1;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game" id="game">
+
+    <header>
+
+        <div class="logo">
+            POP <span>THE LOCK</span>
+        </div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <div class="label">PROGRESS</div>
+                <div class="value" id="progress">0 / 50</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">COMBO</div>
+                <div class="value" id="combo">0</div>
+            </div>
+
+            <div class="stat">
+                <div class="label">SPEED</div>
+                <div class="value" id="speed">1.0x</div>
+            </div>
+
+        </div>
+
+    </header>
+
+    <div class="arena">
+
+        <div class="message" id="message">
+            PRESS SPACE OR CLICK
+        </div>
+
+        <div class="lock" id="lock">
+
+            <div class="target" id="target"></div>
+
+            <div class="needle" id="needle">
+                <div class="needle-line"></div>
+                <div class="needle-dot"></div>
+            </div>
+
+            <div class="center">
+                <div class="center-main" id="centerNumber">0</div>
+                <div class="center-small">LOCKED</div>
+            </div>
+
+        </div>
+
+        <div class="help">
+            HIT THE TARGET • 50 HITS TO UNLOCK
+        </div>
+
+    </div>
+
+    <button id="startButton">START GAME</button>
+
+</div>
+
+<script>
+
+const TARGET_HITS = 50;
+
+const lock = document.getElementById("lock");
+const needle = document.getElementById("needle");
+const target = document.getElementById("target");
+
+const progress = document.getElementById("progress");
+const comboText = document.getElementById("combo");
+const speedText = document.getElementById("speed");
+const message = document.getElementById("message");
+const centerNumber = document.getElementById("centerNumber");
+
+const startButton = document.getElementById("startButton");
+const game = document.getElementById("game");
+
+let angle = 0;
+let targetAngle = 0;
+
+let hits = 0;
+let combo = 0;
+
+let running = false;
+let lastTime = 0;
+
+let speed = 120;
+
+/*
+    1 = clockwise
+   -1 = counter-clockwise
+*/
+let direction = 1;
+
+let audioContext = null;
+
+
+/* -----------------------------
+   TARGET
+----------------------------- */
+
+function randomTarget() {
+
+    targetAngle = Math.random() * 360;
+
+    const radians = targetAngle * Math.PI / 180;
+
+    target.style.left =
+        (50 + Math.cos(radians) * 43) + "%";
+
+    target.style.top =
+        (50 + Math.sin(radians) * 43) + "%";
+}
+
+
+/* -----------------------------
+   STATS
+----------------------------- */
+
+function updateStats() {
+
+    progress.textContent =
+        `${hits} / ${TARGET_HITS}`;
+
+    comboText.textContent =
+        combo;
+
+    /*
+        Speed multiplier.
+
+        Starts at 1.0x
+        Gets progressively faster
+    */
+
+    const multiplier =
+        1 + (hits * 0.045);
+
+    speedText.textContent =
+        multiplier.toFixed(1) + "x";
+
+    centerNumber.textContent =
+        hits;
+}
+
+
+/* -----------------------------
+   START
+----------------------------- */
+
+function startGame() {
+
+    hits = 0;
+    combo = 0;
+
+    angle = 0;
+
+    speed = 120;
+
+    /*
+        Start in a random direction
+    */
+
+    direction =
+        Math.random() < 0.5 ? 1 : -1;
+
+    running = true;
+
+    startButton.textContent =
+        "RESTART";
+
+    message.textContent =
+        "POP THE LOCK";
+
+    message.style.color =
+        "#5cff9d";
+
+    game.classList.remove("win");
+
+    randomTarget();
+
+    updateStats();
+
+    lastTime =
+        performance.now();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* -----------------------------
+   GAME LOOP
+----------------------------- */
+
+function gameLoop(time) {
+
+    if (!running) return;
+
+    const dt =
+        (time - lastTime) / 1000;
+
+    lastTime = time;
+
+    /*
+        The game gets faster after
+        every successful hit.
+
+        0 hits  = 120 deg/sec
+        50 hits = 345 deg/sec
+    */
+
+    speed =
+        120 + hits * 3;
+
+    angle +=
+        speed * direction * dt;
+
+    angle %= 360;
+
+    needle.style.transform =
+        `rotate(${angle}deg)`;
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+/* -----------------------------
+   SOUND
+----------------------------- */
+
+function playSound(
+    frequency,
+    duration,
+    type = "square"
+) {
+
+    try {
+
+        if (!audioContext) {
+
+            audioContext =
+                new (
+                    window.AudioContext ||
+                    window.webkitAudioContext
+                )();
+        }
+
+        const oscillator =
+            audioContext.createOscillator();
+
+        const gain =
+            audioContext.createGain();
+
+        oscillator.type =
+            type;
+
+        oscillator.frequency.value =
+            frequency;
+
+        gain.gain.setValueAtTime(
+            0.07,
+            audioContext.currentTime
+        );
+
+        gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioContext.currentTime + duration
+        );
+
+        oscillator.connect(gain);
+
+        gain.connect(
+            audioContext.destination
+        );
+
+        oscillator.start();
+
+        oscillator.stop(
+            audioContext.currentTime + duration
+        );
+
+    } catch (e) {}
+
+}
+
+
+/* -----------------------------
+   ANGLE MATH
+----------------------------- */
+
+function angleDifference(a, b) {
+
+    let diff =
+        Math.abs(a - b) % 360;
+
+    if (diff > 180) {
+        diff = 360 - diff;
+    }
+
+    return diff;
+}
+
+
+/* -----------------------------
+   POP
+----------------------------- */
+
+function pop() {
+
+    /*
+        Clicking before starting
+        starts the game.
+    */
+
+    if (!running) {
+
+        startGame();
+
+        return;
+    }
+
+
+    /*
+        Target gets smaller as
+        the player progresses.
+
+        Early:
+        ~15 degrees
+
+        Late:
+        ~5 degrees
+    */
+
+    const tolerance =
+        Math.max(
+            5,
+            15 - hits * 0.20
+        );
+
+
+    const difference =
+        angleDifference(
+            angle,
+            targetAngle
+        );
+
+
+    /* -------------------------
+       SUCCESS
+    ------------------------- */
+
+    if (difference <= tolerance) {
+
+        hits++;
+
+        combo++;
+
+
+        /*
+            Higher pitch as you
+            progress.
+        */
+
+        playSound(
+            500 + hits * 12,
+            0.08
+        );
+
+
+        if (combo >= 5) {
+
+            message.textContent =
+                `COMBO x${combo}!`;
+
+        } else {
+
+            message.textContent =
+                "NICE!";
+        }
+
+
+        message.style.color =
+            "#8dffb4";
+
+
+        /*
+            Green flash
+        */
+
+        lock.classList.remove(
+            "flash"
+        );
+
+        void lock.offsetWidth;
+
+        lock.classList.add(
+            "flash"
+        );
+
+
+        /*
+            NEW TARGET
+        */
+
+        randomTarget();
+
+
+        /*
+            IMPORTANT:
+            THE DIRECTION CHANGES
+            AFTER EVERY SUCCESSFUL CLICK.
+        */
+
+        direction *= -1;
+
+
+        updateStats();
+
+
+        /*
+            50 HITS = WIN
+        */
+
+        if (hits >= TARGET_HITS) {
+
+            winGame();
+        }
+
+    }
+
+    /* -------------------------
+       MISS
+    ------------------------- */
+
+    else {
+
+        die();
+    }
+}
+
+
+/* -----------------------------
+   DEATH
+----------------------------- */
+
+function die() {
+
+    running = false;
+
+    playSound(
+        100,
+        0.3,
+        "sawtooth"
+    );
+
+    combo = 0;
+
+
+    message.textContent =
+        "LOCK JAMMED!";
+
+    message.style.color =
+        "#ff6b6b";
+
+
+    /*
+        Shake the lock
+    */
+
+    lock.classList.remove(
+        "shake"
+    );
+
+    void lock.offsetWidth;
+
+    lock.classList.add(
+        "shake"
+    );
+
+
+    /*
+        IMPORTANT:
+        DYING RESETS THE ENTIRE RUN.
+        YOU GO BACK TO 0 / 50.
+    */
+
+    hits = 0;
+
+    updateStats();
+
+    startButton.textContent =
+        "TRY AGAIN";
+}
+
+
+/* -----------------------------
+   WIN
+----------------------------- */
+
+function winGame() {
+
+    running = false;
+
+    playSound(
+        800,
+        0.12
+    );
+
+    setTimeout(() => {
+
+        playSound(
+            1100,
+            0.18
+        );
+
+    }, 100);
+
+
+    message.textContent =
+        "LOCK DECRYPTED!";
+
+    message.style.color =
+        "#ffffff";
+
+
+    game.classList.add(
+        "win"
+    );
+
+
+    startButton.textContent =
+        "PLAY AGAIN";
+}
+
+
+/* -----------------------------
+   CONTROLS
+----------------------------- */
+
+document.addEventListener(
+    "keydown",
+    e => {
+
+        if (
+            e.code === "Space" ||
+            e.code === "Enter"
+        ) {
+
+            e.preventDefault();
+
+            pop();
+        }
+
+    }
+);
+
+
+/*
+    Click anywhere on the lock
+*/
+
+lock.addEventListener(
+    "click",
+    pop
+);
+
+
+/*
+    Start / restart button
+*/
+
+startButton.addEventListener(
+    "click",
+    startGame
+);
+
+
+/*
+    Initial target
+*/
+
+randomTarget();
+
+updateStats();
+
+</script>
+
+</body>
+</html>
+
+
+
